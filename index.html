@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>智驾云 - 行车记录仪云平台</title>
+<style>
+/* ============================================ */
+/* 全局样式                                      */
+/* ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1D4ED8;
+  --primary-light: #DBEAFE;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ============================================ */
+/* 页面容器                                      */
+/* ============================================ */
+.page {
+  display: none;
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease;
+}
+.page.active { display: flex; flex-direction: column; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================ */
+/* 顶部导航栏                                    */
+/* ============================================ */
+.navbar {
+  background: var(--primary);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar h1 { font-size: 17px; font-weight: 600; flex: 1; }
+.navbar .back-btn {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; border: none; color: white; font-size: 18px;
+}
+.navbar .nav-icon {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 20px;
+}
+
+/* ============================================ */
+/* 底部导航                                      */
+/* ============================================ */
+.tab-bar {
+  display: flex;
+  background: white;
+  border-top: 1px solid var(--gray-200);
+  padding: 6px 0 env(safe-area-inset-bottom, 8px);
+  position: sticky;
+  bottom: 0;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 0; cursor: pointer; color: var(--gray-400); font-size: 10px; border: none; background: none;
+}
+.tab-item.active { color: var(--primary); }
+.tab-item .tab-icon { font-size: 22px; }
+.tab-item .tab-label { font-size: 10px; }
+
+/* ============================================ */
+/* 卡片                                          */
+/* ============================================ */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 16px;
+  box-shadow: var(--shadow);
+}
+
+/* ============================================ */
+/* 登录页                                        */
+/* ============================================ */
+.login-page {
+  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+  justify-content: center;
+  align-items: center;
+  padding: 40px 32px;
+}
+.login-logo {
+  width: 80px; height: 80px; background: white; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin-bottom: 16px; box-shadow: var(--shadow-lg);
+}
+.login-title { color: white; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.login-subtitle { color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 40px; }
+.login-input {
+  width: 100%; padding: 14px 16px; border-radius: 10px; border: none;
+  font-size: 16px; margin-bottom: 12px; background: rgba(255,255,255,0.95);
+  outline: none;
+}
+.login-input::placeholder { color: var(--gray-400); }
+.login-btn {
+  width: 100%; padding: 14px; border-radius: 10px; border: none;
+  background: white; color: var(--primary); font-size: 16px; font-weight: 600;
+  cursor: pointer; margin-top: 8px;
+  transition: transform 0.1s;
+}
+.login-btn:active { transform: scale(0.98); }
+.login-footer { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 24px; }
+
+/* ============================================ */
+/* 设备列表                                      */
+/* ============================================ */
+.device-card {
+  background: white; border-radius: var(--radius); margin: 12px 16px;
+  box-shadow: var(--shadow); overflow: hidden; cursor: pointer;
+  transition: transform 0.15s;
+}
+.device-card:active { transform: scale(0.98); }
+.device-preview {
+  height: 180px; background: var(--gray-800); position: relative;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.device-preview canvas { width: 100%; height: 100%; }
+.device-status {
+  position: absolute; top: 12px; left: 12px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+}
+.device-status.online { background: rgba(16,185,129,0.9); color: white; }
+.device-status.offline { background: rgba(107,114,128,0.9); color: white; }
+.device-status .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.device-time {
+  position: absolute; bottom: 12px; right: 12px;
+  background: rgba(0,0,0,0.6); color: white; padding: 3px 8px;
+  border-radius: 4px; font-size: 11px; font-family: monospace;
+}
+.device-info { padding: 14px 16px; }
+.device-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.device-meta { font-size: 12px; color: var(--gray-500); display: flex; gap: 16px; }
+.device-actions {
+  display: flex; gap: 8px; padding: 0 16px 14px;
+}
+.device-action-btn {
+  flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--gray-200);
+  background: white; font-size: 12px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 4px; color: var(--gray-600);
+}
+.device-action-btn.primary {
+  background: var(--primary); color: white; border-color: var(--primary);
+}
+
+/* ============================================ */
+/* 实时预览页                                    */
+/* ============================================ */
+.live-container {
+  background: black; position: relative; width: 100%;
+  aspect-ratio: 16/9;
+}
+.live-container canvas { width: 100%; height: 100%; display: block; }
+.live-overlay {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; padding: 12px;
+}
+.live-badge {
+  background: var(--danger); color: white; padding: 3px 10px;
+  border-radius: 4px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.live-quality {
+  background: rgba(0,0,0,0.5); color: white; padding: 3px 8px;
+  border-radius: 4px; font-size: 11px;
+}
+.live-controls {
+  display: flex; justify-content: space-around; padding: 20px 16px;
+  background: var(--gray-900);
+}
+.live-ctrl-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: white; font-size: 11px; cursor: pointer; border: none; background: none;
+  opacity: 0.8;
+}
+.live-ctrl-btn .ctrl-icon {
+  width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.live-ctrl-btn.active .ctrl-icon { background: var(--primary); }
+.live-info-panel { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+
+/* ============================================ */
+/* 事件列表                                      */
+/* ============================================ */
+.event-item {
+  display: flex; gap: 12px; padding: 14px 16px; background: white;
+  border-bottom: 1px solid var(--gray-100); cursor: pointer;
+}
+.event-item:active { background: var(--gray-50); }
+.event-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.event-icon.collision { background: #FEE2E2; }
+.event-icon.motion { background: #FEF3C7; }
+.event-icon.parking { background: #DBEAFE; }
+.event-icon.speed { background: #FCE7F3; }
+.event-content { flex: 1; min-width: 0; }
+.event-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.event-desc { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-time { font-size: 11px; color: var(--gray-400); }
+.event-thumb {
+  width: 56px; height: 42px; border-radius: 6px; background: var(--gray-200);
+  flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--gray-400);
+}
+
+/* ============================================ */
+/* 回放页                                        */
+/* ============================================ */
+.playback-video {
+  background: var(--gray-900); width: 100%; aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.playback-video canvas { width: 100%; height: 100%; }
+.timeline-container { padding: 16px; background: white; }
+.timeline-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--gray-700); }
+.timeline-bar {
+  height: 32px; background: var(--gray-100); border-radius: 6px; position: relative;
+  overflow: hidden; margin-bottom: 8px; cursor: pointer;
+}
+.timeline-segment {
+  position: absolute; top: 0; height: 100%;
+  border-radius: 4px;
+}
+.timeline-segment.normal { background: var(--primary-light); }
+.timeline-segment.event { background: var(--danger); opacity: 0.7; }
+.timeline-cursor {
+  position: absolute; top: -4px; width: 3px; height: 40px;
+  background: var(--primary); border-radius: 2px;
+  transition: left 0.3s;
+}
+.timeline-times {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--gray-400);
+}
+.playback-events { padding: 0 16px; }
+.playback-event-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 12px; border-radius: 20px; font-size: 12px;
+  margin: 4px; cursor: pointer;
+}
+.playback-event-tag.active { background: var(--primary); color: white; }
+.playback-event-tag:not(.active) { background: var(--gray-100); color: var(--gray-600); }
+
+/* ============================================ */
+/* GPS轨迹                                      */
+/* ============================================ */
+.map-container {
+  width: 100%; height: 280px; background: #E8F0E8; position: relative;
+  overflow: hidden;
+}
+.map-container canvas { width: 100%; height: 100%; }
+.map-info-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.95); padding: 12px 16px;
+  backdrop-filter: blur(10px);
+}
+.map-stats { display: flex; justify-content: space-around; }
+.map-stat { text-align: center; }
+.map-stat-value { font-size: 18px; font-weight: 700; color: var(--primary); }
+.map-stat-label { font-size: 11px; color: var(--gray-500); }
+.trip-list { padding: 8px 0; }
+.trip-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: white; border-bottom: 1px solid var(--gray-100); cursor: pointer;
+}
+.trip-item:active { background: var(--gray-50); }
+.trip-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+.trip-info { flex: 1; }
+.trip-route { font-size: 14px; font-weight: 500; }
+.trip-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+/* ============================================ */
+/* 云存储套餐                                    */
+/* ============================================ */
+.plan-card {
+  border: 2px solid var(--gray-200); border-radius: var(--radius);
+  padding: 20px; margin: 8px 16px; position: relative; cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.plan-card:active { transform: scale(0.98); }
+.plan-card.popular { border-color: var(--primary); }
+.plan-badge {
+  position: absolute; top: -10px; right: 16px;
+  background: var(--primary); color: white; padding: 2px 12px;
+  border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.plan-name { font-size: 16px; font-weight: 600; }
+.plan-price { font-size: 28px; font-weight: 700; color: var(--primary); margin: 8px 0; }
+.plan-price span { font-size: 14px; font-weight: 400; color: var(--gray-500); }
+.plan-features { list-style: none; }
+.plan-features li {
+  padding: 4px 0; font-size: 13px; color: var(--gray-600);
+  display: flex; align-items: center; gap: 6px;
+}
+.plan-features li::before { content: "✓"; color: var(--success); font-weight: 700; }
+.plan-btn {
+  width: 100%; padding: 10px; border-radius: 8px; border: none;
+  margin-top: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.plan-btn.primary { background: var(--primary); color: white; }
+.plan-btn.outline { background: white; color: var(--primary); border: 1px solid var(--primary); }
+
+/* ============================================ */
+/* 设置页                                        */
+/* ============================================ */
+.setting-group { margin: 12px 16px; }
+.setting-group-title { font-size: 12px; color: var(--gray-500); padding: 0 4px 8px; }
+.setting-item {
+  display: flex; align-items: center; padding: 14px 16px;
+  background: white; border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+}
+.setting-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.setting-item:last-child { border-radius: 0 0 var(--radius) var(--radius); border-bottom: none; }
+.setting-item:only-child { border-radius: var(--radius); }
+.setting-icon { font-size: 20px; margin-right: 12px; }
+.setting-label { flex: 1; font-size: 15px; }
+.setting-value { font-size: 14px; color: var(--gray-400); margin-right: 8px; }
+.setting-arrow { color: var(--gray-300); font-size: 14px; }
+
+/* 开关 */
+.toggle {
+  width: 44px; height: 24px; background: var(--gray-300);
+  border-radius: 12px; position: relative; cursor: pointer;
+  transition: background 0.3s;
+}
+.toggle.on { background: var(--primary); }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; background: white; border-radius: 50%;
+  transition: transform 0.3s; box-shadow: var(--shadow);
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* ============================================ */
+/* 弹窗/Toast                                   */
+/* ============================================ */
+.toast {
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+  background: var(--gray-800); color: white; padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; z-index: 999;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+
+.section-title {
+  font-size: 15px; font-weight: 600; padding: 16px 16px 8px;
+  color: var(--gray-700);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center; padding: 60px 40px; color: var(--gray-400);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* 加载动画 */
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+/* 数据面板 */
+.data-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  padding: 12px 16px;
+}
+.data-cell {
+  background: white; border-radius: var(--radius); padding: 14px;
+  box-shadow: var(--shadow); text-align: center;
+}
+.data-cell .data-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+.data-cell .data-label { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+
+/* 水波纹 */
+.add-device-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 12px 16px; padding: 14px; border-radius: var(--radius);
+  border: 2px dashed var(--gray-300); background: white;
+  color: var(--gray-400); font-size: 14px; cursor: pointer;
+}
+.add-device-btn:active { background: var(--gray-50); border-color: var(--primary); color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- 页面1：登录页                                  -->
+<!-- ============================================ -->
+<div id="page-login" class="page login-page active">
+  <div class="login-logo">🚗</div>
+  <div class="login-title">智驾云</div>
+  <div class="login-subtitle">行车记录仪智能云平台</div>
+  <input class="login-input" type="tel" placeholder="请输入手机号" id="login-phone" value="138****8888" maxlength="11">
+  <input class="login-input" type="text" placeholder="请输入验证码" id="login-code" value="8888" maxlength="6">
+  <button class="login-btn" onclick="doLogin()">登 录</button>
+  <div class="login-footer">演示版本 v1.0 · 数据均为模拟</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面2：首页（设备列表）                         -->
+<!-- ============================================ -->
+<div id="page-home" class="page">
+  <div class="navbar">
+    <h1>智驾云</h1>
+    <div class="nav-icon" onclick="showToast('消息中心')">🔔</div>
+    <div class="nav-icon" onclick="navigateTo('settings')">👤</div>
+  </div>
+
+  <!-- 数据概览 -->
+  <div class="data-grid">
+    <div class="data-cell">
+      <div class="data-value">2</div>
+      <div class="data-label">设备总数</div>
+    </div>
+    <div class="data-cell">
+      <div class="data-value">1</div>
+      <div class="data-label">在线设备</div>
+    </div>
+    <div class="data-cell">
+      <div class="data-value">3</div>
+      <div class="data-label">今日事件</div>
+    </div>
+    <div class="data-cell">
+      <div class="data-value">68km</div>
+      <div class="data-label">今日里程</div>
+    </div>
+  </div>
+
+  <div class="section-title">我的设备</div>
+
+  <!-- 设备1（在线） -->
+  <div class="device-card" onclick="navigateTo('live')">
+    <div class="device-preview">
+      <canvas id="canvas-home-1"></canvas>
+      <div class="device-status online"><span class="dot"></span> 在线</div>
+      <div class="device-time" id="home-time-1">--:--:--</div>
+    </div>
+    <div class="device-info">
+      <div class="device-name">前车记录仪（主驾）</div>
+      <div class="device-meta">
+        <span>DC-200Pro</span>
+        <span>4G信号: 良好</span>
+        <span>存储: 62%</span>
+      </div>
+    </div>
+    <div class="device-actions">
+      <button class="device-action-btn primary" onclick="event.stopPropagation(); navigateTo('live')">📹 实时预览</button>
+      <button class="device-action-btn" onclick="event.stopPropagation(); navigateTo('playback')">⏪ 云录像</button>
+      <button class="device-action-btn" onclick="event.stopPropagation(); navigateTo('track')">📍 轨迹</button>
+    </div>
+  </div>
+
+  <!-- 设备2（离线） -->
+  <div class="device-card">
+    <div class="device-preview">
+      <canvas id="canvas-home-2"></canvas>
+      <div class="device-status offline"><span class="dot"></span> 离线</div>
+    </div>
+    <div class="device-info">
+      <div class="device-name">后车记录仪</div>
+      <div class="device-meta">
+        <span>DC-100</span>
+        <span>最后在线: 2小时前</span>
+      </div>
+    </div>
+    <div class="device-actions">
+      <button class="device-action-btn" onclick="event.stopPropagation(); navigateTo('playback')">⏪ 云录像</button>
+      <button class="device-action-btn" onclick="event.stopPropagation(); navigateTo('track')">📍 轨迹</button>
+    </div>
+  </div>
+
+  <!-- 添加设备 -->
+  <div class="add-device-btn" onclick="showToast('📷 请扫描设备上的二维码')">
+    ＋ 添加新设备
+  </div>
+
+  <!-- 底部导航 -->
+  <div style="flex:1"></div>
+  <div class="tab-bar">
+    <button class="tab-item active" onclick="navigateTo('home')">
+      <span class="tab-icon">🏠</span><span class="tab-label">首页</span>
+    </button>
+    <button class="tab-item" onclick="navigateTo('events')">
+      <span class="tab-icon">⚡</span><span class="tab-label">事件</span>
+    </button>
+    <button class="tab-item" onclick="navigateTo('track')">
+      <span class="tab-icon">📍</span><span class="tab-label">轨迹</span>
+    </button>
+    <button class="tab-item" onclick="navigateTo('plans')">
+      <span class="tab-icon">☁️</span><span class="tab-label">云存储</span>
+    </button>
+    <button class="tab-item" onclick="navigateTo('settings')">
+      <span class="tab-icon">⚙️</span><span class="tab-label">我的</span>
+    </button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面3：实时预览                                -->
+<!-- ============================================ -->
+<div id="page-live" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1>实时预览</h1>
+    <div class="nav-icon" onclick="showToast('已截图保存')">📸</div>
+  </div>
+
+  <div class="live-container">
+    <canvas id="canvas-live"></canvas>
+    <div class="live-overlay">
+      <div class="live-badge">● LIVE</div>
+      <div class="live-quality">1080P</div>
+    </div>
+  </div>
+
+  <div class="live-controls">
+    <button class="live-ctrl-btn active" onclick="showToast('正在录制中')">
+      <span class="ctrl-icon">⏺</span>录制
+    </button>
+    <button class="live-ctrl-btn" onclick="showToast('已截图保存到相册')">
+      <span class="ctrl-icon">📷</span>截图
+    </button>
+    <button class="live-ctrl-btn" onclick="showToast('🔊 声音已开启')">
+      <span class="ctrl-icon">🔊</span>声音
+    </button>
+    <button class="live-ctrl-btn" onclick="showToast('切换到全屏')">
+      <span class="ctrl-icon">⛶</span>全屏
+    </button>
+    <button class="live-ctrl-btn" onclick="showToast('🎤 对讲已开启')">
+      <span class="ctrl-icon">🎤</span>对讲
+    </button>
+  </div>
+
+  <div class="live-info-panel">
+    <div class="section-title">设备信息</div>
+    <div class="data-grid">
+      <div class="data-cell">
+        <div class="data-value" style="font-size:16px;">深南大道</div>
+        <div class="data-label">当前位置</div>
+      </div>
+      <div class="data-cell">
+        <div class="data-value">42km/h</div>
+        <div class="data-label">当前速度</div>
+      </div>
+      <div class="data-cell">
+        <div class="data-value">87%</div>
+        <div class="data-label">4G 信号</div>
+      </div>
+      <div class="data-cell">
+        <div class="data-value">62%</div>
+        <div class="data-label">SD卡容量</div>
+      </div>
+    </div>
+
+    <div class="section-title">最近事件</div>
+    <div class="event-item" onclick="showToast('查看事件详情')">
+      <div class="event-icon collision">💥</div>
+      <div class="event-content">
+        <div class="event-title">碰撞检测告警</div>
+        <div class="event-desc">检测到轻微碰撞，已自动保存录像</div>
+        <div class="event-time">10分钟前 · 深南大道与科技路交叉口</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面4：事件列表                                -->
+<!-- ============================================ -->
+<div id="page-events" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1>事件中心</h1>
+    <div class="nav-icon" onclick="showToast('筛选')">🔍</div>
+  </div>
+
+  <div style="display:flex; gap:8px; padding:12px 16px; overflow-x:auto;">
+    <span class="playback-event-tag active">全部 (12)</span>
+    <span class="playback-event-tag">碰撞 (3)</span>
+    <span class="playback-event-tag">移动侦测 (5)</span>
+    <span class="playback-event-tag">超速 (2)</span>
+    <span class="playback-event-tag">停车守卫 (2)</span>
+  </div>
+
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon collision">💥</div>
+    <div class="event-content">
+      <div class="event-title">碰撞检测告警</div>
+      <div class="event-desc">检测到轻微碰撞，G-Sensor 触发值: 2.3g</div>
+      <div class="event-time">今天 14:32 · 深南大道</div>
+    </div>
+    <div class="event-thumb">▶ 0:30</div>
+  </div>
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon motion">🚶</div>
+    <div class="event-content">
+      <div class="event-title">移动侦测</div>
+      <div class="event-desc">停车状态检测到车辆前方有人移动</div>
+      <div class="event-time">今天 13:15 · 科技园停车场</div>
+    </div>
+    <div class="event-thumb">▶ 0:15</div>
+  </div>
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon speed">🚨</div>
+    <div class="event-content">
+      <div class="event-title">超速预警</div>
+      <div class="event-desc">当前速度 128km/h，超过限速 120km/h</div>
+      <div class="event-time">今天 11:05 · 广深高速</div>
+    </div>
+    <div class="event-thumb">▶ 0:20</div>
+  </div>
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon parking">🅿️</div>
+    <div class="event-content">
+      <div class="event-title">停车守卫</div>
+      <div class="event-desc">检测到车身被碰撞，已自动录制</div>
+      <div class="event-time">今天 09:40 · 小区地下停车场</div>
+    </div>
+    <div class="event-thumb">▶ 0:45</div>
+  </div>
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon collision">💥</div>
+    <div class="event-content">
+      <div class="event-title">碰撞检测告警</div>
+      <div class="event-desc">紧急制动触发，G-Sensor 触发值: 3.8g</div>
+      <div class="event-time">昨天 17:22 · 北环大道</div>
+    </div>
+    <div class="event-thumb">▶ 0:30</div>
+  </div>
+  <div class="event-item" onclick="navigateTo('playback')">
+    <div class="event-icon motion">🚶</div>
+    <div class="event-content">
+      <div class="event-title">移动侦测</div>
+      <div class="event-desc">检测到有人在车辆周围徘徊</div>
+      <div class="event-time">昨天 23:15 · 小区地下停车场</div>
+    </div>
+    <div class="event-thumb">▶ 0:20</div>
+  </div>
+
+  <div style="flex:1"></div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="navigateTo('home')"><span class="tab-icon">🏠</span><span class="tab-label">首页</span></button>
+    <button class="tab-item active" onclick="navigateTo('events')"><span class="tab-icon">⚡</span><span class="tab-label">事件</span></button>
+    <button class="tab-item" onclick="navigateTo('track')"><span class="tab-icon">📍</span><span class="tab-label">轨迹</span></button>
+    <button class="tab-item" onclick="navigateTo('plans')"><span class="tab-icon">☁️</span><span class="tab-label">云存储</span></button>
+    <button class="tab-item" onclick="navigateTo('settings')"><span class="tab-icon">⚙️</span><span class="tab-label">我的</span></button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面5：云录像回放                              -->
+<!-- ============================================ -->
+<div id="page-playback" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('events')">←</button>
+    <h1>云录像回放</h1>
+    <div class="nav-icon" onclick="showToast('下载到本地')">⬇️</div>
+  </div>
+
+  <div class="playback-video">
+    <canvas id="canvas-playback"></canvas>
+    <div class="live-overlay">
+      <div style="background:rgba(0,0,0,0.5);color:white;padding:3px 8px;border-radius:4px;font-size:12px;">⏪ 回放</div>
+      <div class="live-quality" id="playback-time-display">14:32:15</div>
+    </div>
+  </div>
+
+  <div class="timeline-container">
+    <div class="timeline-label">2025年1月15日 时间轴</div>
+    <div class="timeline-bar" onclick="moveTimeline(event)">
+      <div class="timeline-segment normal" style="left:0%;width:35%"></div>
+      <div class="timeline-segment event" style="left:35%;width:3%"></div>
+      <div class="timeline-segment normal" style="left:38%;width:20%"></div>
+      <div class="timeline-segment event" style="left:58%;width:2%"></div>
+      <div class="timeline-segment normal" style="left:60%;width:25%"></div>
+      <div class="timeline-segment event" style="left:85%;width:2%"></div>
+      <div class="timeline-cursor" id="timeline-cursor" style="left:35%"></div>
+    </div>
+    <div class="timeline-times">
+      <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+    </div>
+  </div>
+
+  <div class="section-title">事件标记</div>
+  <div class="playback-events">
+    <span class="playback-event-tag active" onclick="jumpToEvent(35)">💥 14:32 碰撞</span>
+    <span class="playback-event-tag" onclick="jumpToEvent(58)">🚶 13:15 移动侦测</span>
+    <span class="playback-event-tag" onclick="jumpToEvent(85)">🅿️ 09:40 停车守卫</span>
+  </div>
+
+  <div class="section-title">录像片段</div>
+  <div class="event-item" onclick="showToast('播放此片段')">
+    <div class="event-icon collision">💥</div>
+    <div class="event-content">
+      <div class="event-title">碰撞录像 #1</div>
+      <div class="event-desc">14:31:45 - 14:32:45 · 时长 60秒</div>
+      <div class="event-time">文件大小: 12.3 MB</div>
+    </div>
+    <div class="event-thumb">▶ 1:00</div>
+  </div>
+  <div class="event-item" onclick="showToast('播放此片段')">
+    <div class="event-icon motion">🚶</div>
+    <div class="event-content">
+      <div class="event-title">移动侦测录像</div>
+      <div class="event-desc">13:15:10 - 13:15:25 · 时长 15秒</div>
+      <div class="event-time">文件大小: 3.2 MB</div>
+    </div>
+    <div class="event-thumb">▶ 0:15</div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面6：GPS轨迹                                -->
+<!-- ============================================ -->
+<div id="page-track" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1>行驶轨迹</h1>
+    <div class="nav-icon" onclick="showToast('选择日期')">📅</div>
+  </div>
+
+  <div class="map-container">
+    <canvas id="canvas-map"></canvas>
+    <div class="map-info-bar">
+      <div class="map-stats">
+        <div class="map-stat">
+          <div class="map-stat-value">68.5</div>
+          <div class="map-stat-label">今日里程(km)</div>
+        </div>
+        <div class="map-stat">
+          <div class="map-stat-value">2h15m</div>
+          <div class="map-stat-label">行驶时长</div>
+        </div>
+        <div class="map-stat">
+          <div class="map-stat-value">42</div>
+          <div class="map-stat-label">平均速度(km/h)</div>
+        </div>
+        <div class="map-stat">
+          <div class="map-stat-value">3</div>
+          <div class="map-stat-label">行程数</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">今日行程</div>
+  <div class="trip-list">
+    <div class="trip-item" onclick="showToast('查看行程详情')">
+      <div class="trip-dot"></div>
+      <div class="trip-info">
+        <div class="trip-route">家 → 科技园</div>
+        <div class="trip-meta">08:15 - 09:02 · 28.3km · 47分钟</div>
+      </div>
+      <span style="color:var(--gray-400);font-size:14px;">›</span>
+    </div>
+    <div class="trip-item" onclick="showToast('查看行程详情')">
+      <div class="trip-dot" style="background:var(--success)"></div>
+      <div class="trip-info">
+        <div class="trip-route">科技园 → 华强北</div>
+        <div class="trip-meta">12:30 - 13:05 · 15.2km · 35分钟</div>
+      </div>
+      <span style="color:var(--gray-400);font-size:14px;">›</span>
+    </div>
+    <div class="trip-item" onclick="showToast('查看行程详情')">
+      <div class="trip-dot" style="background:var(--warning)"></div>
+      <div class="trip-info">
+        <div class="trip-route">华强北 → 科技园</div>
+        <div class="trip-meta">14:10 - 14:45 · 15.0km · 35分钟 · ⚠️ 1次急刹</div>
+      </div>
+      <span style="color:var(--gray-400);font-size:14px;">›</span>
+    </div>
+  </div>
+
+  <div style="flex:1"></div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="navigateTo('home')"><span class="tab-icon">🏠</span><span class="tab-label">首页</span></button>
+    <button class="tab-item" onclick="navigateTo('events')"><span class="tab-icon">⚡</span><span class="tab-label">事件</span></button>
+    <button class="tab-item active" onclick="navigateTo('track')"><span class="tab-icon">📍</span><span class="tab-label">轨迹</span></button>
+    <button class="tab-item" onclick="navigateTo('plans')"><span class="tab-icon">☁️</span><span class="tab-label">云存储</span></button>
+    <button class="tab-item" onclick="navigateTo('settings')"><span class="tab-icon">⚙️</span><span class="tab-label">我的</span></button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面7：云存储套餐                              -->
+<!-- ============================================ -->
+<div id="page-plans" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1>云存储套餐</h1>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;margin-top:16px;">
+    <div style="font-size:13px;opacity:0.8;">当前套餐</div>
+    <div style="font-size:20px;font-weight:700;margin:4px 0;">基础版 · 3天循环存储</div>
+    <div style="font-size:12px;opacity:0.7;">到期时间：2025-12-31 · 已用 2.1 GB / 5 GB</div>
+    <div style="background:rgba(255,255,255,0.2);border-radius:4px;height:6px;margin-top:10px;">
+      <div style="background:white;border-radius:4px;height:100%;width:42%;"></div>
+    </div>
+  </div>
+
+  <div class="section-title">升级套餐</div>
+
+  <div class="plan-card" onclick="selectPlan(this)">
+    <div class="plan-name">基础版</div>
+    <div class="plan-price">免费 <span>/ 永久</span></div>
+    <ul class="plan-features">
+      <li>事件录像云存储 3 天</li>
+      <li>每日事件上限 10 条</li>
+      <li>720P 回放</li>
+      <li>基础告警推送</li>
+    </ul>
+    <button class="plan-btn outline">当前套餐</button>
+  </div>
+
+  <div class="plan-card popular" onclick="selectPlan(this)">
+    <div class="plan-badge">最受欢迎</div>
+    <div class="plan-name">标准版</div>
+    <div class="plan-price">¥9.9 <span>/ 月</span></div>
+    <ul class="plan-features">
+      <li>事件录像云存储 7 天</li>
+      <li>24小时全天录像存储</li>
+      <li>1080P 高清回放</li>
+      <li>AI 人形检测</li>
+      <li>微信实时告警推送</li>
+      <li>录像下载（每月 10 次）</li>
+    </ul>
+    <button class="plan-btn primary" onclick="event.stopPropagation(); showToast('🎉 已选择标准版，正在跳转支付...')">立即订阅</button>
+  </div>
+
+  <div class="plan-card" onclick="selectPlan(this)">
+    <div class="plan-name">旗舰版</div>
+    <div class="plan-price">¥19.9 <span>/ 月</span></div>
+    <ul class="plan-features">
+      <li>事件录像云存储 30 天</li>
+      <li>24小时全天录像存储</li>
+      <li>1080P 高清回放</li>
+      <li>AI 人形/车牌识别</li>
+      <li>微信 + APP 双通道告警</li>
+      <li>录像无限下载</li>
+      <li>多设备共享（最多 5 人）</li>
+      <li>专属客服通道</li>
+    </ul>
+    <button class="plan-btn outline" onclick="event.stopPropagation(); showToast('🎉 已选择旗舰版，正在跳转支付...')">立即订阅</button>
+  </div>
+
+  <div style="height:20px;"></div>
+
+  <div style="flex:1"></div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="navigateTo('home')"><span class="tab-icon">🏠</span><span class="tab-label">首页</span></button>
+    <button class="tab-item" onclick="navigateTo('events')"><span class="tab-icon">⚡</span><span class="tab-label">事件</span></button>
+    <button class="tab-item" onclick="navigateTo('track')"><span class="tab-icon">📍</span><span class="tab-label">轨迹</span></button>
+    <button class="tab-item active" onclick="navigateTo('plans')"><span class="tab-icon">☁️</span><span class="tab-label">云存储</span></button>
+    <button class="tab-item" onclick="navigateTo('settings')"><span class="tab-icon">⚙️</span><span class="tab-label">我的</span></button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面8：设置（我的）                             -->
+<!-- ============================================ -->
+<div id="page-settings" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1>我的</h1>
+  </div>
+
+  <!-- 用户信息 -->
+  <div class="card" style="display:flex; align-items: center; gap: 14px;">
+    <div style="width:56px;height:56px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>
+    <div style="flex:1;">
+      <div style="font-size:17px;font-weight:600;">138****8888</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:2px;">ID: USR_2025011500001</div>
+    </div>
+    <span style="color:var(--gray-300);">›</span>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">设备管理</div>
+    <div class="setting-item" onclick="navigateTo('device-settings')">
+      <span class="setting-icon">📹</span>
+      <span class="setting-label">设备设置</span>
+      <span class="setting-value">前车记录仪</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('固件已是最新版本 v2.1.3')">
+      <span class="setting-icon">🔄</span>
+      <span class="setting-label">固件升级</span>
+      <span class="setting-value">v2.1.3（最新）</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('分享设备给家人')">
+      <span class="setting-icon">👥</span>
+      <span class="setting-label">设备分享</span>
+      <span class="setting-value">1人</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">云服务</div>
+    <div class="setting-item" onclick="navigateTo('plans')">
+      <span class="setting-icon">☁️</span>
+      <span class="setting-label">云存储套餐</span>
+      <span class="setting-value">基础版</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('流量使用情况')">
+      <span class="setting-icon">📊</span>
+      <span class="setting-label">流量统计</span>
+      <span class="setting-value">本月 2.1GB</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">通知设置</div>
+    <div class="setting-item">
+      <span class="setting-icon">🔔</span>
+      <span class="setting-label">碰撞告警推送</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item">
+      <span class="setting-icon">🚶</span>
+      <span class="setting-label">移动侦测推送</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item">
+      <span class="setting-icon">🚨</span>
+      <span class="setting-label">超速预警推送</span>
+      <div class="toggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item">
+      <span class="setting-icon">📱</span>
+      <span class="setting-label">微信通知</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">其他</div>
+    <div class="setting-item" onclick="showToast('帮助中心')">
+      <span class="setting-icon">❓</span>
+      <span class="setting-label">帮助与反馈</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('关于智驾云 v1.0.0')">
+      <span class="setting-icon">ℹ️</span>
+      <span class="setting-label">关于</span>
+      <span class="setting-value">v1.0.0</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="navigateTo('login'); showToast('已退出登录')">
+      <span class="setting-icon">🚪</span>
+      <span class="setting-label" style="color:var(--danger);">退出登录</span>
+    </div>
+  </div>
+
+  <div style="height:20px;"></div>
+
+  <div style="flex:1"></div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="navigateTo('home')"><span class="tab-icon">🏠</span><span class="tab-label">首页</span></button>
+    <button class="tab-item" onclick="navigateTo('events')"><span class="tab-icon">⚡</span><span class="tab-label">事件</span></button>
+    <button class="tab-item" onclick="navigateTo('track')"><span class="tab-icon">📍</span><span class="tab-label">轨迹</span></button>
+    <button class="tab-item" onclick="navigateTo('plans')"><span class="tab-icon">☁️</span><span class="tab-label">云存储</span></button>
+    <button class="tab-item active" onclick="navigateTo('settings')"><span class="tab-icon">⚙️</span><span class="tab-label">我的</span></button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面9：设备设置                                -->
+<!-- ============================================ -->
+<div id="page-device-settings" class="page">
+  <div class="navbar">
+    <button class="back-btn" onclick="navigateTo('settings')">←</button>
+    <h1>设备设置</h1>
+  </div>
+
+  <div class="card" style="display:flex; align-items: center; gap: 12px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:24px;">📹</div>
+    <div>
+      <div style="font-size:15px;font-weight:600;">前车记录仪（主驾）</div>
+      <div style="font-size:12px;color:var(--gray-500);">DC-200Pro · SN: DC2025A00001</div>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">录像设置</div>
+    <div class="setting-item" onclick="showToast('已切换为 1080P')">
+      <span class="setting-icon">🎬</span>
+      <span class="setting-label">录像分辨率</span>
+      <span class="setting-value">1080P</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item">
+      <span class="setting-icon">🔁</span>
+      <span class="setting-label">循环录像</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item" onclick="showToast('录像片段时长: 3分钟')">
+      <span class="setting-icon">⏱️</span>
+      <span class="setting-label">片段时长</span>
+      <span class="setting-value">3 分钟</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">检测灵敏度</div>
+    <div class="setting-item" onclick="showToast('碰撞灵敏度: 中')">
+      <span class="setting-icon">💥</span>
+      <span class="setting-label">碰撞检测灵敏度</span>
+      <span class="setting-value">中</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('移动侦测灵敏度: 高')">
+      <span class="setting-icon">🚶</span>
+      <span class="setting-label">移动侦测灵敏度</span>
+      <span class="setting-value">高</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item">
+      <span class="setting-icon">🅿️</span>
+      <span class="setting-label">停车守卫模式</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item" onclick="showToast('超速阈值: 120 km/h')">
+      <span class="setting-icon">🚨</span>
+      <span class="setting-label">超速预警阈值</span>
+      <span class="setting-value">120 km/h</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="setting-group-title">其他</div>
+    <div class="setting-item">
+      <span class="setting-icon">🔊</span>
+      <span class="setting-label">录像声音</span>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-item" onclick="showToast('时区: UTC+8 北京时间')">
+      <span class="setting-icon">🕐</span>
+      <span class="setting-label">时区设置</span>
+      <span class="setting-value">UTC+8</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('⚠️ 格式化将清除SD卡所有数据')">
+      <span class="setting-icon">💾</span>
+      <span class="setting-label" style="color:var(--danger);">格式化 SD 卡</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('⚠️ 确定要解绑此设备吗？')">
+      <span class="setting-icon">🔓</span>
+      <span class="setting-label" style="color:var(--danger);">解绑设备</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div style="height:40px;"></div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- JavaScript                                    -->
+<!-- ============================================ -->
+<script>
+// ============================================
+// 页面导航
+// ============================================
+function navigateTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.classList.add('active');
+    target.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+  // 启动/停止对应的 canvas 动画
+  if (pageId === 'live') startLiveCanvas();
+  if (pageId === 'home') startHomeCanvases();
+  if (pageId === 'playback') startPlaybackCanvas();
+  if (pageId === 'track') drawMap();
+}
+
+// ============================================
+// 登录
+// ============================================
+function doLogin() {
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = '登录中...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '登 录';
+    btn.disabled = false;
+    navigateTo('home');
+    showToast('✅ 登录成功，欢迎回来！');
+  }, 1000);
+}
+
+// ============================================
+// Toast 提示
+// ============================================
+function showToast(msg) {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ============================================
+// 套餐选择
+// ============================================
+function selectPlan(el) {
+  document.querySelectorAll('.plan-card').forEach(c => c.style.borderColor = '#E5E7EB');
+  el.style.borderColor = '#2563EB';
+}
+
+// ============================================
+// 时间轴交互
+// ============================================
+function moveTimeline(e) {
+  const bar = e.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+  document.getElementById('timeline-cursor').style.left = pct + '%';
+  const hours = Math.floor(pct / 100 * 24);
+  const mins = Math.floor((pct / 100 * 24 - hours) * 60);
+  document.getElementById('playback-time-display').textContent =
+    String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':00';
+}
+
+function jumpToEvent(pct) {
+  document.getElementById('timeline-cursor').style.left = pct + '%';
+  const hours = Math.floor(pct / 100 * 24);
+  const mins = Math.floor((pct / 100 * 24 - hours) * 60);
+  document.getElementById('playback-time-display').textContent =
+    String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':00';
+  showToast('⏩ 跳转到事件位置');
+}
+
+// ============================================
+// Canvas 模拟行车画面（简易道路动画）
+// ============================================
+function drawDashcamFrame(canvas, time, isOnline) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth * 2;
+  const h = canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(1, 1);
+
+  if (!isOnline) {
+    // 离线 - 灰色噪点
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#666';
+    ctx.font = `${w * 0.04}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('设备离线', w / 2, h / 2);
+    return;
+  }
+
+  // 天空渐变
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#B0D4F1');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h * 0.55);
+
+  // 地面
+  ctx.fillStyle = '#555';
+  ctx.fillRect(0, h * 0.55, w, h * 0.45);
+
+  // 道路
+  const roadL = w * 0.2;
+  const roadR = w * 0.8;
+  const vanishY = h * 0.55;
+  const vanishX = w * 0.5 + Math.sin(time * 0.3) * w * 0.02;
+
+  ctx.fillStyle = '#444';
+  ctx.beginPath();
+  ctx.moveTo(vanishX - w * 0.05, vanishY);
+  ctx.lineTo(vanishX + w * 0.05, vanishY);
+  ctx.lineTo(roadR, h);
+  ctx.lineTo(roadL, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // 道路中线（动画）
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([20, 20]);
+  ctx.lineDashOffset = -time * 80;
+  ctx.beginPath();
+  ctx.moveTo(vanishX, vanishY);
+  ctx.lineTo(w * 0.5, h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 路边线
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(vanishX - w * 0.04, vanishY);
+  ctx.lineTo(roadL, h);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(vanishX + w * 0.04, vanishY);
+  ctx.lineTo(roadR, h);
+  ctx.stroke();
+
+  // 远处建筑
+  for (let i = 0; i < 8; i++) {
+    const bx = w * 0.05 + i * w * 0.12;
+    const bh = h * 0.08 + Math.sin(i * 1.5) * h * 0.04;
+    ctx.fillStyle = `hsl(${200 + i * 10}, 10%, ${60 + i * 3}%)`;
+    ctx.fillRect(bx, vanishY - bh, w * 0.08, bh);
+  }
+
+  // 仪表盘遮挡
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, h * 0.92, w, h * 0.08);
+  ctx.fillStyle = '#2563EB';
+  ctx.fillRect(w * 0.05, h * 0.93, w * 0.15, h * 0.04);
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${w * 0.02}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText(Math.floor(38 + Math.sin(time) * 8) + ' km/h', w * 0.125, h * 0.96);
+
+  // 时间戳
+  const now = new Date();
+  const ts = now.getFullYear() + '/' +
+    String(now.getMonth() + 1).padStart(2, '0') + '/' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0');
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = `${w * 0.022}px monospace`;
+  ctx.textAlign = 'left';
+  ctx.fillText(ts, w * 0.03, h * 0.06);
+
+  // GPS 坐标
+  const lat = (22.5431 + Math.sin(time * 0.1) * 0.001).toFixed(4);
+  const lng = (114.0579 + Math.cos(time * 0.1) * 0.001).toFixed(4);
+  ctx.fillText(`GPS: ${lat}°N ${lng}°E`, w * 0.03, h * 0.1);
+}
+
+// 首页设备预览
+let homeAnimId;
+function startHomeCanvases() {
+  cancelAnimationFrame(homeAnimId);
+  const c1 = document.getElementById('canvas-home-1');
+  const c2 = document.getElementById('canvas-home-2');
+  let t = 0;
+  function frame() {
+    t += 0.016;
+    drawDashcamFrame(c1, t, true);
+    drawDashcamFrame(c2, t, false);
+    // 更新时间
+    const now = new Date();
+    const el = document.getElementById('home-time-1');
+    if (el) el.textContent = now.toLocaleTimeString();
+    homeAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// 实时预览
+let liveAnimId;
+function startLiveCanvas() {
+  cancelAnimationFrame(liveAnimId);
+  const c = document.getElementById('canvas-live');
+  let t = 0;
+  function frame() {
+    t += 0.016;
+    drawDashcamFrame(c, t, true);
+    liveAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// 回放
+let playbackAnimId;
+function startPlaybackCanvas() {
+  cancelAnimationFrame(playbackAnimId);
+  const c = document.getElementById('canvas-playback');
+  let t = 0;
+  function frame() {
+    t += 0.008; // 回放速度慢一点
+    drawDashcamFrame(c, t, true);
+    playbackAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// ============================================
+// GPS 轨迹地图（Canvas 简易绘制）
+// ============================================
+function drawMap() {
+  const canvas = document.getElementById('canvas-map');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth * 2;
+  const h = canvas.height = canvas.offsetHeight * 2;
+
+  // 地图背景
+  ctx.fillStyle = '#E8EFE8';
+  ctx.fillRect(0, 0, w, h);
+
+  // 网格（模拟道路）
+  ctx.strokeStyle = '#D0D8D0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < w; i += w / 12) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+  }
+  for (let j = 0; j < h; j += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(w, j); ctx.stroke();
+  }
+
+  // 主要道路
+  ctx.strokeStyle = '#FFF';
+  ctx.lineWidth = w * 0.03;
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.5);
+  ctx.lineTo(w, h * 0.5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.5, 0);
+  ctx.lineTo(w * 0.5, h);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.3);
+  ctx.lineTo(w, h * 0.7);
+  ctx.stroke();
+
+  // GPS 轨迹线
+  const points = [
+    [0.15, 0.75], [0.2, 0.7], [0.25, 0.62], [0.3, 0.55],
+    [0.35, 0.5], [0.42, 0.48], [0.5, 0.45], [0.55, 0.4],
+    [0.6, 0.38], [0.65, 0.35], [0.7, 0.3], [0.75, 0.28],
+    [0.78, 0.25], [0.82, 0.22], [0.85, 0.2]
+  ];
+
+  // 轨迹阴影
+  ctx.strokeStyle = 'rgba(37, 99, 235, 0.3)';
+  ctx.lineWidth = w * 0.025;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0] * w, p[1] * h);
+    else ctx.lineTo(p[0] * w, p[1] * h);
+  });
+  ctx.stroke();
+
+  // 轨迹主线
+  ctx.strokeStyle = '#2563EB';
+  ctx.lineWidth = w * 0.012;
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0] * w, p[1] * h);
+    else ctx.lineTo(p[0] * w, p[1] * h);
+  });
+  ctx.stroke();
+
+  // 起点
+  const sp = points[0];
+  ctx.fillStyle = '#10B981';
+  ctx.beginPath();
+  ctx.arc(sp[0] * w, sp[1] * h, w * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${w * 0.022}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('起', sp[0] * w, sp[1] * h);
+
+  // 终点
+  const ep = points[points.length - 1];
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(ep[0] * w, ep[1] * h, w * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.fillText('终', ep[0] * w, ep[1] * h);
+
+  // 事件标记点
+  const eventPoint = points[7];
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(eventPoint[0] * w, eventPoint[1] * h, w * 0.015, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${w * 0.018}px sans-serif`;
+  ctx.fillText('!', eventPoint[0] * w, eventPoint[1] * h);
+  ctx.fillStyle = '#F59E0B';
+  ctx.font = `${w * 0.018}px sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText('急刹 14:32', eventPoint[0] * w + w * 0.025, eventPoint[1] * h + w * 0.005);
+
+  // 标签
+  ctx.fillStyle = '#666';
+  ctx.font = `${w * 0.02}px sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText('🏠 家', sp[0] * w + w * 0.03, sp[1] * h - w * 0.01);
+  ctx.fillText('🏢 科技园', ep[0] * w - w * 0.12, ep[1] * h - w * 0.03);
+}
+
+// ============================================
+// 初始化
+// ============================================
+window.addEventListener('load', () => {
+  // 首页 canvas 动画
+  startHomeCanvases();
+});
+</script>
+
+</body>
+</html>
